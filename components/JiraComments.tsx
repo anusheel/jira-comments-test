@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { htmlToADF } from '@atlaskit/editor-common';
 
 interface JiraCommentsProps {
   issueKey: string;
@@ -45,21 +46,7 @@ const JiraComments: React.FC<JiraCommentsProps> = ({ issueKey }) => {
 
   const addComment = async () => {
     try {
-      const adf = {
-        version: 1,
-        type: 'doc',
-        content: [
-          {
-            type: 'paragraph',
-            content: [
-              {
-                type: 'text',
-                text: newComment,
-              },
-            ],
-          },
-        ],
-      };
+      const adf = htmlToADF(newComment);
       setAdfComment(JSON.stringify(adf, null, 2));
       const res = await fetch('/api/jira', {
         method: 'POST',
