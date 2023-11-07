@@ -14,6 +14,8 @@ interface Comment {
 const JiraComments: React.FC<JiraCommentsProps> = ({ issueKey }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [newComment, setNewComment] = useState<string>('');
+  const [adfComment, setAdfComment] = useState<string>('');
 
   useEffect(() => {
     fetchComments();
@@ -43,16 +45,33 @@ const JiraComments: React.FC<JiraCommentsProps> = ({ issueKey }) => {
 
   const addComment = async () => {
     try {
+      const adf = {
+        version: 1,
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: newComment,
+              },
+            ],
+          },
+        ],
+      };
+      setAdfComment(JSON.stringify(adf, null, 2));
       const res = await fetch('/api/jira', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ issueKey, comment: 'New comment' }),
+        body: JSON.stringify({ issueKey, comment: adf }),
       });
       const data = await res.json();
       if (res.ok) {
         setComments([...comments, data]);
+        setNewComment('');
       } else {
         setError(data.error);
       }
@@ -77,8 +96,20 @@ const JiraComments: React.FC<JiraCommentsProps> = ({ issueKey }) => {
           </div>
         ))
       )}
+      <textarea
+        className="w-full p-2 mb-2 border rounded"
+        value={newComment}
+        onChange={(e) => setNewComment(e.target.value)}
+        placeholder="Add a new comment"
+      />
       <button className="mr-2 py-1 px-3 rounded bg-blue-500 text-white" onClick={fetchComments}>Fetch Comments</button>
       <button className="py-1 px-3 rounded bg-green-500 text-white" onClick={addComment}>Add Comment</button>
+      {adfComment && (
+        <div className="mt-4">
+          <h3 className="text-lg font-bold mb-2">ADF Format:</h3>
+          <pre className="p-2 bg-gray-100 rounded">{adfComment}</pre>
+        </div>
+      )}
     </div>
   );
 };
